@@ -1,0 +1,25 @@
+require('dotenv').config({ path: './config.env' });
+
+module.exports = {
+    VERSION: 'v2.1.0',
+    SESSION: process.env.ASENA_SESSION || '',
+    WORK_TYPE: (process.env.WORK_TYPE || 'private').toLowerCase(),
+    HANDLERS: process.env.HANDLERS || '^[.!;]',
+    ALIVE_MESSAGE: process.env.ALIVE_MESSAGE || 'default',
+    ANTI_LINK: process.env.ANTI_LINK === 'true',
+    ANTILINK_MESSAGE: process.env.ANTILINK_MESSAGE || 'default',
+    SEND_READ: process.env.SEND_READ === 'true',
+    NO_ONLINE: process.env.NO_ONLINE !== 'false',
+    BAN_MESSAGE: process.env.BAN_MESSAGE || 'default',
+    ADD_MESSAGE: process.env.ADD_MESSAGE || 'default',
+    MUTE_MESSAGE: process.env.MUTE_MESSAGE || 'default',
+    UNMUTE_MESSAGE: process.env.UNMUTE_MESSAGE || 'default',
+    PROMOTE_MESSAGE: process.env.PROMOTE_MESSAGE || 'default',
+    DEMOTE_MESSAGE: process.env.DEMOTE_MESSAGE || 'default',
+    BLOCK_MESSAGE: process.env.BLOCK_MESSAGE || 'default',
+    UNBLOCK_MESSAGE: process.env.UNBLOCK_MESSAGE || 'default',
+    KICKME_MESSAGE: process.env.KICKME_MESSAGE || 'default',
+    AFK_MESSAGE: process.env.AFK_MESSAGE || 'default',
+    SUDO: process.env.SUDO || false,
+    WEATHER_API: process.env.WEATHER_API || 'your_api_key_here',
+};
