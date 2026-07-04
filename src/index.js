@@ -15,6 +15,13 @@ const config = require('./config');
 const { getCommands } = require('./events');
 const { Filters } = require('./db');
 const qrcode = require('qrcode-terminal');
+const express = require('express');
+
+// Start Express server for Render health checks
+const app = express();
+const port = process.env.PORT || 3000;
+app.get('/', (req, res) => res.send('SFL Bot is running!'));
+app.listen(port, () => console.log(`🌐 Web server listening on port ${port}`));
 
 // Load all plugins
 fs.readdirSync(path.join(__dirname, 'plugins')).forEach(file => {
@@ -81,6 +88,11 @@ async function startBot() {
         if (connection === 'open') {
             console.log(`\n✅ SFL Bot connected! [${config.VERSION}]`);
             console.log(`   Mode: ${config.WORK_TYPE} | Prefix: ${config.HANDLERS.replace('^[', '').replace(']', '')[0] || '.'}\n`);
+
+            const botJid = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+            const prefix = config.HANDLERS.replace('^[', '').replace(']', '')[0] || '.';
+            const msg = `✅ *SFL Bot is now Online!*\n\n*Version:* \`${config.VERSION}\`\n*Mode:* \`${config.WORK_TYPE}\`\n*Prefix:* \`${prefix}\`\n\nUse \`${prefix}help\` to see the list of commands.`;
+            sock.sendMessage(botJid, { text: msg }).catch(() => {});
         }
         if (connection === 'close') {
             const code = lastDisconnect?.error?.output?.statusCode;
