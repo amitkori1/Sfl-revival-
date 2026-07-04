@@ -14,6 +14,7 @@ const path = require('path');
 const config = require('./config');
 const { getCommands } = require('./events');
 const { Filters } = require('./db');
+const qrcode = require('qrcode-terminal');
 
 // Load all plugins
 fs.readdirSync(path.join(__dirname, 'plugins')).forEach(file => {
@@ -44,8 +45,17 @@ function getMentions(msg) {
 
 async function startBot() {
     if (!fs.existsSync(SESSION_DIR)) {
-        console.log('\n❌ No session found! Please run `npm run qr` first to scan the QR code.\n');
-        process.exit(1);
+        fs.mkdirSync(SESSION_DIR, { recursive: true });
+    }
+
+    const credsPath = path.join(SESSION_DIR, 'creds.json');
+    if (!fs.existsSync(credsPath) && config.SESSION) {
+        try {
+            const credsData = Buffer.from(config.SESSION, 'base64').toString('utf-8');
+            fs.writeFileSync(credsPath, credsData);
+        } catch (e) {
+            console.log('❌ Invalid base64 SESSION provided');
+        }
     }
 
     const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
@@ -54,7 +64,7 @@ async function startBot() {
     const sock = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
-        printQRInTerminal: false,
+        printQRInTerminal: !fs.existsSync(credsPath),
         auth: state,
         browser: ['SFL Bot', 'Desktop', '3.0'],
         generateHighQualityLinkPreview: true,
@@ -62,7 +72,12 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
+    sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
+        if (qr) {
+            qrcode.generate(qr, { small: true });
+            console.log('\n\n✅ Scan the QR code above with WhatsApp.\n');
+            console.log('Go to: WhatsApp > Linked Devices > Link a Device\n');
+        }
         if (connection === 'open') {
             console.log(`\n✅ SFL Bot connected! [${config.VERSION}]`);
             console.log(`   Mode: ${config.WORK_TYPE} | Prefix: ${config.HANDLERS.replace('^[', '').replace(']', '')[0] || '.'}\n`);
@@ -74,8 +89,9 @@ async function startBot() {
             if (shouldReconnect) {
                 setTimeout(startBot, 3000);
             } else {
-                console.log('❌ Logged out. Delete ./session and run `npm run qr` again.');
-                process.exit(1);
+                console.log('❌ Logged out. Removing session and generating a new QR code.');
+                fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+                setTimeout(startBot, 3000);
             }
         }
     });
