@@ -5,18 +5,6 @@ const os = require('os');
 const { execSync } = require('child_process');
 const axios = require('axios');
 
-// alive
-addCommand({ pattern: 'alive', fromMe: true, desc: 'Check if the bot is alive' }, async (sock, msg, match) => {
-    const jid = msg.key.remoteJid;
-    if (config.ALIVE_MESSAGE !== 'default') {
-        return sock.sendMessage(jid, { text: config.ALIVE_MESSAGE.replace('{version}', config.VERSION) });
-    }
-    const uptime = secondsToHms(process.uptime());
-    await sock.sendMessage(jid, {
-        text: `🤖 *SFL Bot is Alive!*\n\n*Version:* \`${config.VERSION}\`\n*Uptime:* \`${uptime}\`\n*Mode:* \`${config.WORK_TYPE}\``
-    });
-});
-
 function secondsToHms(d) {
     d = Number(d);
     const h = Math.floor(d / 3600);
@@ -39,15 +27,6 @@ addCommand({ pattern: 'sysd', fromMe: true, desc: 'Show system information' }, a
     await sock.sendMessage(jid, {
         text: `💻 *System Info*\n\n*OS:* \`${platform} ${arch}\`\n*CPU:* \`${cpus}\`\n*RAM:* \`${freeMem}GB free / ${totalMem}GB total\`\n*Uptime:* \`${uptime}\`\n*Node.js:* \`${nodeVer}\`\n*Bot Version:* \`${config.VERSION}\``
     });
-});
-
-// ping
-addCommand({ pattern: 'ping', fromMe: true, desc: 'Check bot response time' }, async (sock, msg, match) => {
-    const jid = msg.key.remoteJid;
-    const start = Date.now();
-    const sent = await sock.sendMessage(jid, { text: '🏓 Pinging...' });
-    const elapsed = Date.now() - start;
-    await sock.sendMessage(jid, { text: `🏓 *Pong!* \`${elapsed}ms\``, edit: sent.key });
 });
 
 // calc
@@ -79,27 +58,6 @@ addCommand({ pattern: 'weather', fromMe: true, desc: 'Get weather for a city. Us
     } catch {
         await sock.sendMessage(jid, { text: '❌ City not found or weather service unavailable.' });
     }
-});
-
-// help
-addCommand({ pattern: 'help', fromMe: true, desc: 'Show list of commands' }, async (sock, msg, match) => {
-    const jid = msg.key.remoteJid;
-    const cmds = getCommands().filter(c => c.options.desc && c.options.pattern);
-
-    const prefix = config.HANDLERS.replace('^[', '').replace(']', '')[0] || '.';
-    const grouped = {};
-    cmds.forEach(c => {
-        const cat = c.options.category || 'General';
-        if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(`• \`${prefix}${c.options.pattern}\` — ${c.options.desc}`);
-    });
-
-    let text = `🤖 *SFL Bot Commands* | v${config.VERSION}\n\n`;
-    for (const [cat, list] of Object.entries(grouped)) {
-        text += `*━━ ${cat} ━━*\n${list.join('\n')}\n\n`;
-    }
-    text += `_Prefix: \`${prefix}\`  |  Mode: \`${config.WORK_TYPE}\`_`;
-    await sock.sendMessage(jid, { text });
 });
 
 // info
